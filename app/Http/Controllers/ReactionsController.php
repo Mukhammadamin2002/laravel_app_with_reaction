@@ -9,7 +9,6 @@ class ReactionsController extends Controller
 {
     public function toggle(Post $post, Request $req)
     {
-        $post->toggleReaction($req->reaction)
+        $post->toggleReaction($req->reaction);
     }
 }
- 

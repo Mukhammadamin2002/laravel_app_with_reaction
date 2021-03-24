@@ -1,17 +1,9 @@
 <template>
 
     <div class="mt-3 d-flex">
-        <div class="px-1">
-            <img style="width: 20px" src="/themes/reactions/images/reactions_like.jpg">
-            <span class="px-1">2</span>
-        </div>
-        <div class="px-1">
-            <img style="width: 20px" src="/themes/reactions/images/reactions_haha.jpg">
-            <span class="px-1">2</span>
-        </div>
-        <div class="px-1">
-            <img style="width: 20px" src="/themes/reactions/images/reactions_wow.jpg">
-            <span class="px-1">2</span>
+        <div class="px-1" v-for="(count, reaction) in reactions_summary" :key="reaction" v-show="count">
+            <img style="width: 20px" :src="image(reaction)">
+            <span class="px-1">{{count}}</span>
         </div>
     </div>
 
@@ -43,12 +35,13 @@
 <script>
     export default {
 
-        props: ['reacted'],
+        props: ["summary", "reacted"],
 
         data() {
             return {
                 show_reaction_types: false,
                 types: ["like", "love", "haha", "angry", "sad", "wow"],
+                reactions_summary: { ... this.summary},
                 auth_reaction: this.reacted ? this.reacted.type : null,
             };
         },
@@ -58,12 +51,39 @@
             },
             toggleRaction(reaction) {
                 let path = window.location.href;
+                let old_reaction = this.auth_reaction;
 
-                axios.post(`${path}/reaction`, {reaction});
+                axios.post(`${path}/reaction`, {reaction})
+                .catch(() => {
+                    this.saveReaction(old_reaction, reaction);
+                })
 
                 this.show_reaction_types = false;
+                this.saveReaction(reaction, old_reaction);
 
-                this.auth_reaction = reaction;
+            },
+
+            saveReaction(new_reaction, old_reaction) {
+                this.resetReactionsSummary(new_reaction, old_reaction);
+                if(this.auth_reaction === new_reaction) {
+                    this.auth_reaction = null;
+                    return;
+                } 
+                    this.auth_reaction = new_reaction;
+            },
+
+            resetReactionsSummary(new_reaction, old_reaction) {
+                if(old_reaction) {
+                    this.reactions_summary[old_reaction]--;
+                } 
+
+                if(new_reaction && new_reaction !== old_reaction) {
+                    if(!this.reactions_summary[new_reaction]) {
+                        this.reactions_summary[new_reaction] = 1;
+                        return;
+                    }
+                    this.reactions_summary[new_reaction]++;
+                }
             },
         },
     };
